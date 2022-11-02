@@ -2,6 +2,5 @@
 
 *Visit master branch to see the codebase.*
 
-## Microloan Service Web App 
-## Implemented using MERN stack
-## RTQ Query utilized to enhance the somplicity of fetching and chaching data
+## Microloan Service Web App implemented using MERN stack
+## RTQ Query used to enhance the somplicity of fetching and chaching data
