@@ -17,7 +17,7 @@ const getAllLoans = asyncHandler(async (req, res) => {
 // @route GET /loan/:id
 // @access Private
 const getLoan = asyncHandler(async (req, res) => {
-    const { id } = req.params
+    const { id } = req.body
     
     //might need to assign user with id
     const loan = await Loan.findOne({"user":id}).exec()
@@ -32,11 +32,11 @@ const getLoan = asyncHandler(async (req, res) => {
 // @route POST /mortgages/:id
 // @access Private
 const createNewLoan = asyncHandler(async (req, res) => {
-    const { id } = req.params
-    const {loanreq, loanperiod, loanpaid, goldtotal } = req.body
-
+    
+    const {user, loanreq, loanperiod, loanpaid, goldtotal } = req.body
+    const id = user
     //Confirm data
-    if (!id || !loanreq || !loanperiod || !loanpaid || !goldtotal) {
+    if (!user || !loanreq || !loanperiod || !loanpaid || !goldtotal) {
         return res.status(400).json({ message: 'All fields are into required'})
     }
     //const user = id 
@@ -57,8 +57,7 @@ const createNewLoan = asyncHandler(async (req, res) => {
 // @route PATCH /mortages/:id
 // @access Private
 const updateLoanPay = asyncHandler(async (req, res) => {
-    const { id } = req.params.id
-    const { loanpaid } = req.body
+    const { id, loanpaid } = req.body
 
     //Confirm data
     if (!id || !loanpaid ) {

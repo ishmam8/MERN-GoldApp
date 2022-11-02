@@ -7,11 +7,14 @@ const bcrypt = require('bcrypt')
 // @route GET /users
 // @access Private
 const getAllUsers = asyncHandler(async (req, res) => {
-    //.select(-password) !return the password; .lean() return a json type obj
+    // Get all users from MongoDB
     const users = await User.find().select('-password').lean()
-    if(!users?.length){
-        return res.status(400).json({ message: 'No users found'})
+
+    // If no users 
+    if (!users?.length) {
+        return res.status(400).json({ message: 'No users found' })
     }
+
     res.json(users)
 })
 
@@ -21,32 +24,31 @@ const getAllUsers = asyncHandler(async (req, res) => {
 const createNewUser = asyncHandler(async (req, res) => {
     const { username, password, roles } = req.body
 
-    //Confirm data
+    // Confirm data
     if (!username || !password || !Array.isArray(roles) || !roles.length) {
-        return res.status(400).json({ message: 'All fields are required'})
+        console.log(roles)
+        return res.status(400).json({ message: 'All fields are required' })
     }
 
-    //Check for duplicate
-    //do not get error reporting if not .exec()
+    // Check for duplicate username
     const duplicate = await User.findOne({ username }).lean().exec()
 
     if (duplicate) {
-        //409 = conflict
-        return res.status(409).json({ message: 'Duplicate username'})
+        return res.status(409).json({ message: 'Duplicate username' })
     }
 
-    //Hash password
+    // Hash password 
     const hashedPwd = await bcrypt.hash(password, 10) // salt rounds
 
-    const userObject = { username, "password": hashedPwd, roles}
+    const userObject = { username, "password": hashedPwd, roles }
 
-    // Create and store new user
+    // Create and store new user 
     const user = await User.create(userObject)
 
-    if (user) { //created
-        res.status(201).json({ message:`New user ${username} created` })
+    if (user) { //created 
+        res.status(201).json({ message: `New user ${username} created` })
     } else {
-        res.status(400).json({ message: 'Invalid user data received '})
+        res.status(400).json({ message: 'Invalid user data received' })
     }
 })
 
@@ -55,22 +57,24 @@ const createNewUser = asyncHandler(async (req, res) => {
 // @access Private
 const updateUser = asyncHandler(async (req, res) => {
     const { id, username, roles, active, password } = req.body
+    
+    // Confirm data 
+    if (!id || !username || !Array.isArray(roles) || !roles.length ) {
 
-    //Confirm data
-    if(!id || !username || !Array.isArray(roles) || !roles.length ||
-    typeof active !== 'boolean') {
-        return res.status(400).json({ message: 'All fields are required'})
+        return res.status(400).json({ message: 'All fields except password are required' })
     }
 
+    // Does the user exist to update?
     const user = await User.findById(id).exec()
 
-    if(!user) {
+    if (!user) {
         return res.status(400).json({ message: 'User not found' })
     }
 
-    // Check for duplicate
+    // Check for duplicate 
     const duplicate = await User.findOne({ username }).lean().exec()
-    // Allow updates to the original user
+
+    // Allow updates to the original user 
     if (duplicate && duplicate?._id.toString() !== id) {
         return res.status(409).json({ message: 'Duplicate username' })
     }
@@ -80,41 +84,46 @@ const updateUser = asyncHandler(async (req, res) => {
     user.active = active
 
     if (password) {
-        //Hash paswword
-        user.password = await bcrypt.hash(password, 10) //salt rounds
+        // Hash password 
+        user.password = await bcrypt.hash(password, 10) // salt rounds 
     }
 
     const updatedUser = await user.save()
 
-    res.json({ message : `${updatedUser.username} updated`})
+    res.json({ message: `${updatedUser.username} updated` })
+    // const users = await User.find().select('-password').lean()
+    // res.json(users)
 })
 
 // @desc Delete a user
 // @route DELETE /users
 // @access Private
 const deleteUser = asyncHandler(async (req, res) => {
-    const { id } = req.body 
+    const { id } = req.body
 
+    // Confirm data
     if (!id) {
-        return res.status(400).json({ message: 'User ID Required'})
+        return res.status(400).json({ message: 'User ID Required' })
     }
 
-    const mortages = await Loan.findOne({ user: id}).lean().exec()
-    if (mortages) {
-        return res.status(400).json({ message: 'User has assigned mortage'})
+    // Does the user still have assigned notes?
+    const loan = await Loan.findOne({ user: id }).lean().exec()
+    if (loan) {
+        return res.status(400).json({ message: 'User has assigned notes' })
     }
 
+    // Does the user exist to delete?
     const user = await User.findById(id).exec()
 
-    if(!user) {
-        return res.status(400).json({ message: 'User not found '})
+    if (!user) {
+        return res.status(400).json({ message: 'User not found' })
     }
 
     const result = await user.deleteOne()
 
     const reply = `Username ${result.username} with ID ${result._id} deleted`
-    
-    res.json(reply) 
+
+    res.json(reply)
 })
 
 module.exports = {
