@@ -1,16 +1,26 @@
 import { useGetLoansQuery } from "./loansApiSlice"
 import Loan from './Loan'
+import useAuth from "../../hooks/useAuth"
 
 const LoansList = () => {
-    console.log("UsegetQueyr(")
+    //console.log("UsegetLoanQueyr()")
+
+    const { username, isAdmin } = useAuth()
     const {
         data: loans,
         isLoading,
         isSuccess,
         isError,
         error
-    } = useGetLoansQuery()
+    } = useGetLoansQuery(
+        'loansList', {
+            pollingInterval: 15000,
+            refetchOnFocus: true,
+            refetchOnMountOrArgChange: true
+    })
     console.log(useGetLoansQuery())
+    //when different users refresh, update and refetch all the time
+
     let content
 
     if (isLoading) content = <p>Loading...</p>
@@ -21,12 +31,20 @@ const LoansList = () => {
 
     if (isSuccess) {
 
-        const { ids } = loans
+        const { ids, entities } = loans
+        
         // console.log(ids)
-        const tableContent = ids?.length
-            ? ids.map(loanId => <Loan key={loanId} loanId={loanId} />)
-            : null
-        console.log('table content',tableContent)
+        let filteredIds
+        if (isAdmin) {
+            filteredIds = [...ids]
+        } else {
+            filteredIds = ids.filter(noteId => entities[noteId].username === username)
+        }
+
+        const tableContent = ids?.length && filteredIds.map(loanId => <Loan key={loanId} loanId={loanId} />)
+        
+        // console.log('table content',tableContent)
+        //change the table style
         content = (
             <table className="table">
                 <thead className="table__thead">

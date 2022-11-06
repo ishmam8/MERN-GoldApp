@@ -4,9 +4,10 @@ import NewLoanForm from './NewLoanForm'
 
 const NewLoan = () => {
     const users = useSelector(selectAllUsers)
-    console.log("From newloan",users)
+    console.log(users)
+    if (!users?.length) return <p>Not Currently Available</p>
 
-    const content = users ? <NewLoanForm users={users} /> : <p>Loading...</p>
+    const content = <NewLoanForm users={users} />
 
     return content
 }
